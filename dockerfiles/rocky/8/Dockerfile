@@ -62,11 +62,11 @@ ENV GIT_CONFIG_GLOBAL=/var/lib/pgsql/workspace/.gitconfig
 ADD  --chown=postgres:postgres files/postgres.tar.gz /var/lib/pgsql
 COPY --chown=postgres:postgres --chmod=644 files/pgsql_bashrc /var/lib/pgsql/.bashrc
 RUN mkdir -p /var/lib/pgsql/.vscode-server \
-    && mkdir -p /var/lib/pgsql/.claude/projects/-var-lib-pgsql-workspace-postgres/memory \
+    && mkdir -p /var/lib/pgsql/.claude/projects/-var-lib-pgsql-workspace/memory \
     && mkdir -p /var/lib/pgsql/workspace \
     && mkdir -p /var/lib/pgsql/workspace/.vscode \
     && mkdir -p /var/lib/pgsql/workspace/postgres
-COPY --chown=postgres:postgres --chmod=644 files/memory/MEMORY.md /var/lib/pgsql/.claude/projects/-var-lib-pgsql-workspace-postgres/memory/MEMORY.md
+COPY --chown=postgres:postgres --chmod=644 files/MEMORY.md /var/lib/pgsql/.claude/projects/-var-lib-pgsql-workspace/memory/MEMORY.md
 COPY --chown=postgres:postgres --chmod=644 files/psqlrc /var/lib/pgsql/.psqlrc
 COPY --chown=postgres:postgres --chmod=644 files/gitconfig /var/lib/pgsql/workspace/.gitconfig
 COPY --chown=postgres:postgres --chmod=644 files/gitignore /var/lib/pgsql/workspace/.gitignore
@@ -81,7 +81,7 @@ RUN chown -R postgres:postgres /var/lib/pgsql
 RUN tar cvzf /var/lib/pgsql/.git.tar.gz -C /var/lib/pgsql/workspace .gitconfig .gitignore && chown postgres:postgres /var/lib/pgsql/.git.tar.gz
 RUN tar cvzf /var/lib/pgsql/.vscode.tar.gz -C /var/lib/pgsql/workspace .vscode && chown postgres:postgres /var/lib/pgsql/.vscode.tar.gz
 RUN tar cvzf /var/lib/pgsql/.postgres.tar.gz -C /var/lib/pgsql/workspace postgres && chown postgres:postgres /var/lib/pgsql/.postgres.tar.gz
-RUN tar cvzf /var/lib/pgsql/.claude.tar.gz -C /var/lib/pgsql .claude/projects/-var-lib-pgsql-workspace-postgres/memory/MEMORY.md && chown postgres:postgres /var/lib/pgsql/.claude.tar.gz
+RUN tar cvzf /var/lib/pgsql/.claude.tar.gz -C /var/lib/pgsql .claude/projects/-var-lib-pgsql-workspace/memory/MEMORY.md && chown postgres:postgres /var/lib/pgsql/.claude.tar.gz
 
 # Persistent volumes and entrypoint
 VOLUME /var/lib/pgsql/workspace /var/lib/pgsql/.vscode-server /var/lib/pgsql/.claude

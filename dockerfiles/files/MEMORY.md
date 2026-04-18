@@ -16,6 +16,7 @@ PostgreSQL internals development, patch implementation, cross-platform testing p
 - **Prefer the Make-based build** (`pg-configure`, `pg-make`, `pg-check`)
 - Build/test helpers: `pg-configure`, `pg-make`, `pg-install`, `pg-check`, `pg-regress`
 - Use environment variables for paths: `${PG_SOURCE}`, `${PGDATA}`, `${PGHOME}`
+- Project root is the workspace directory; PostgreSQL source lives in the `postgres/` subdirectory (the `pg-*` helpers `cd` there automatically)
 
 ## Git Workflow
 

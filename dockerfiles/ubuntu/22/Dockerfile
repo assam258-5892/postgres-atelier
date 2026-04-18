@@ -62,11 +62,11 @@ ENV GIT_CONFIG_GLOBAL=/var/lib/postgresql/workspace/.gitconfig
 ADD  --chown=postgres:postgres files/postgres.tar.gz /var/lib/postgresql
 COPY --chown=postgres:postgres --chmod=644 files/pgsql_bashrc /var/lib/postgresql/.bashrc
 RUN mkdir -p /var/lib/postgresql/.vscode-server \
-    && mkdir -p /var/lib/postgresql/.claude/projects/-var-lib-postgresql-workspace-postgres/memory \
+    && mkdir -p /var/lib/postgresql/.claude/projects/-var-lib-postgresql-workspace/memory \
     && mkdir -p /var/lib/postgresql/workspace \
     && mkdir -p /var/lib/postgresql/workspace/.vscode \
     && mkdir -p /var/lib/postgresql/workspace/postgres
-COPY --chown=postgres:postgres --chmod=644 files/memory/MEMORY.md /var/lib/postgresql/.claude/projects/-var-lib-postgresql-workspace-postgres/memory/MEMORY.md
+COPY --chown=postgres:postgres --chmod=644 files/MEMORY.md /var/lib/postgresql/.claude/projects/-var-lib-postgresql-workspace/memory/MEMORY.md
 COPY --chown=postgres:postgres --chmod=644 files/psqlrc /var/lib/postgresql/.psqlrc
 COPY --chown=postgres:postgres --chmod=644 files/gitconfig /var/lib/postgresql/workspace/.gitconfig
 COPY --chown=postgres:postgres --chmod=644 files/gitignore /var/lib/postgresql/workspace/.gitignore
@@ -81,7 +81,7 @@ RUN chown -R postgres:postgres /var/lib/postgresql
 RUN tar cvzf /var/lib/postgresql/.git.tar.gz -C /var/lib/postgresql/workspace .gitconfig .gitignore && chown postgres:postgres /var/lib/postgresql/.git.tar.gz
 RUN tar cvzf /var/lib/postgresql/.vscode.tar.gz -C /var/lib/postgresql/workspace .vscode && chown postgres:postgres /var/lib/postgresql/.vscode.tar.gz
 RUN tar cvzf /var/lib/postgresql/.postgres.tar.gz -C /var/lib/postgresql/workspace postgres && chown postgres:postgres /var/lib/postgresql/.postgres.tar.gz
-RUN tar cvzf /var/lib/postgresql/.claude.tar.gz -C /var/lib/postgresql .claude/projects/-var-lib-postgresql-workspace-postgres/memory/MEMORY.md && chown postgres:postgres /var/lib/postgresql/.claude.tar.gz
+RUN tar cvzf /var/lib/postgresql/.claude.tar.gz -C /var/lib/postgresql .claude/projects/-var-lib-postgresql-workspace/memory/MEMORY.md && chown postgres:postgres /var/lib/postgresql/.claude.tar.gz
 
 # Persistent volumes and entrypoint
 VOLUME /var/lib/postgresql/workspace /var/lib/postgresql/.vscode-server /var/lib/postgresql/.claude
