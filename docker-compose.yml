@@ -83,6 +83,69 @@ services:
       core:
         soft: -1
         hard: -1
+  rpr:
+    image: ubuntu24
+    container_name: rpr
+    hostname: rpr
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - rpr-vscode-server:/var/lib/postgresql/.vscode-server
+      - rpr-workspace:/var/lib/postgresql/workspace
+      - rpr-claude:/var/lib/postgresql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
+  pgq:
+    image: ubuntu24
+    container_name: pgq
+    hostname: pgq
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - pgq-vscode-server:/var/lib/postgresql/.vscode-server
+      - pgq-workspace:/var/lib/postgresql/workspace
+      - pgq-claude:/var/lib/postgresql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
+  utf:
+    image: ubuntu24
+    container_name: utf
+    hostname: utf
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - utf-vscode-server:/var/lib/postgresql/.vscode-server
+      - utf-workspace:/var/lib/postgresql/workspace
+      - utf-claude:/var/lib/postgresql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
 volumes:
   rocky9-vscode-server:
   rocky9-workspace:
@@ -96,3 +159,12 @@ volumes:
   ubuntu22-vscode-server:
   ubuntu22-workspace:
   ubuntu22-claude:
+  rpr-vscode-server:
+  rpr-workspace:
+  rpr-claude:
+  pgq-vscode-server:
+  pgq-workspace:
+  pgq-claude:
+  utf-vscode-server:
+  utf-workspace:
+  utf-claude:

@@ -11,3 +11,24 @@ windows:
         command: docker compose exec -ti -e IGNOREEOF=99 -w /var/lib/postgresql/workspace/postgres -u postgres ubuntu24 /bin/bash --login
       - service: ubuntu22
         command: docker compose exec -ti -e IGNOREEOF=99 -w /var/lib/postgresql/workspace/postgres -u postgres ubuntu22 /bin/bash --login
+  - name: rpr
+    layout: even-horizontal
+    panes:
+      - service: rpr
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=L -w /var/lib/postgresql/workspace/postgres -u postgres rpr /bin/bash --login
+      - service: rpr
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=R -w /var/lib/postgresql/workspace -u postgres rpr /bin/bash --login
+  - name: pgq
+    layout: even-horizontal
+    panes:
+      - service: pgq
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=L -w /var/lib/postgresql/workspace/postgres -u postgres pgq /bin/bash --login
+      - service: pgq
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=R -w /var/lib/postgresql/workspace -u postgres pgq /bin/bash --login
+  - name: utf
+    layout: even-horizontal
+    panes:
+      - service: utf
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=L -w /var/lib/postgresql/workspace/postgres -u postgres utf /bin/bash --login
+      - service: utf
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=R -w /var/lib/postgresql/workspace -u postgres utf /bin/bash --login
