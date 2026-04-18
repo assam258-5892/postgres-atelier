@@ -1,0 +1,8 @@
+#!/bin/bash
+
+docker compose up -d --remove-orphans --wait
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+
+./tmux-docker

@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/postgres/src/include",
+                "${workspaceFolder}/postgres/src/interfaces/libpq",
+                "${env:HOME}/.local/include",
+                "${env:HOME}/.local/include/postgresql/server",
+                "/usr/include/libxml2"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

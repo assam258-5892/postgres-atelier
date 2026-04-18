@@ -1,0 +1,37 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "postgres (attach)",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${env:HOME}/.local/bin/postgres",
+            "processId": "${command:pickProcess}",
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "postgres (launch --single)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${env:HOME}/.local/bin/postgres",
+            "args": [
+                "--single",
+                "-D",
+                "${env:HOME}/workspace/pgdata",
+                "postgres"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb"
+        }
+    ]
+}

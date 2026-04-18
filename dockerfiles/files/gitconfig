@@ -1,0 +1,24 @@
+# This is Git's per-user configuration file.
+# Please adapt and uncomment the following lines:
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[core]
+	quotepath = false
+	editor = editor
+	excludesFile = ~/workspace/.gitignore
+[credential]
+	helper = store --file ~/.git-credentials
+[init]
+	defaultBranch = master
+[merge]
+	conflictStyle = diff3
+[pull]
+	rebase = true
+[push]
+	default = simple
+[user]
+	email = anonymous@domain.com
+	name = Anonymous

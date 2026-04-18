@@ -1,0 +1,460 @@
+export LANG=ko_KR.UTF-8
+export LANGUAGE=ko:en
+export LC_ALL=ko_KR.UTF-8
+export TZ=Asia/Seoul
+
+if [[ $- != *i* ]]; then return; fi
+
+USER=`whoami`
+PS1="${USER}@`hostname`:\w\$ "
+PS2='> '
+PS3='+ '
+export USER PS1 PS2 PS3
+
+export PAGER=cat
+
+export POWERLINE_CONFIG_PATHS="${HOME}/.config/powerline"
+alias powerline="if [ -f `which powerline-daemon` ]; then powerline-daemon -q; POWERLINE_BASH_CONTINUATION=1 POWERLINE_BASH_SELECT=1 . $(pip3 show powerline-status | grep Location | awk '{print $2}')/powerline/bindings/bash/powerline.sh; fi"
+if [ "$TERM_PROGRAM" = "Termius" ] || [ "$TERM_PROGRAM" = "vscode" ] || [ "$TERM_PROGRAM" = "tmux" ]; then powerline; fi
+
+ulimit -n 1048576
+ulimit -c unlimited
+
+[ -f "${HOME}/.git-completion.bash" ] && source "${HOME}/.git-completion.bash"
+
+alias remove='rm -f .*~ *~'
+alias claude='EDITOR=jed claude --dangerously-skip-permissions'
+
+export GIT_CONFIG_GLOBAL="${HOME}/workspace/.gitconfig"
+
+function git-log {
+    local lines=$(( ${LINES:-$(tput lines)} - 2 ))
+    git log --oneline --decorate --color "$@" | head -n "$lines"
+    if [ "$?" -ne 0 ]; then
+        echo "Failed to display git log. Please check the output for errors."
+    fi
+}
+
+function git-fetch {
+    for dir in `ls -d ${HOME}/workspace/*/.git`; do
+        (
+            dir="`dirname $dir`"
+            echo "Fetching in $dir"
+            cd "$dir"
+            git fetch --all --tags --prune --force
+        )
+    done
+}
+
+function git-clean {
+    for dir in `ls -d ${HOME}/workspace/*/.git`; do
+        (
+            dir="`dirname $dir`"
+            echo "Cleaning untracked files in $dir"
+            cd "$dir"
+            git clean -xdf
+            if [ $? -ne 0 ]; then
+                echo "Failed to clean untracked files in $dir. Please check the output for errors."
+            else
+                echo "Successfully cleaned untracked files in $dir."
+            fi
+        )
+    done
+}
+
+function pg-configure {
+    (
+        if [ ! -d ${HOME}/workspace/postgres ]; then
+            echo "PostgreSQL source directory not found. Please clone the repository first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres
+
+        MODE="debug"
+        case "$1" in
+            release|r)  MODE="release" ;;
+            debug|d)    MODE="debug" ;;
+            valgrind|v) MODE="valgrind" ;;
+            coverage|c) MODE="coverage" ;;
+            *)
+                echo "Usage: pg-configure [release|debug|valgrind|coverage]"
+                return 1 ;;
+        esac
+        echo "Configuring PostgreSQL... (mode: $MODE)"
+
+        local COMMON_OPTS="--prefix=${HOME}/.local"
+        COMMON_OPTS+=" --with-icu --with-openssl"
+        COMMON_OPTS+=" --with-libxml --with-libxslt"
+        COMMON_OPTS+=" --with-lz4 --with-zstd --with-libcurl"
+        COMMON_OPTS+=" --with-uuid=e2fs"
+        COMMON_OPTS+=" --with-ldap --with-pam --with-systemd --with-gssapi --with-selinux"
+        COMMON_OPTS+=" --with-libnuma --with-llvm"
+        COMMON_OPTS+=" --with-perl --with-python --with-tcl"
+        COMMON_OPTS+=" --enable-nls --enable-tap-tests --enable-dtrace"
+
+        # liburing is not available on Rocky 8
+        if [ -r /etc/os-release ]; then
+            . /etc/os-release
+            local _major="${VERSION_ID%%.*}"
+            if [ "$ID" != "rocky" ] || [ "$_major" != "8" ]; then
+                COMMON_OPTS+=" --with-liburing"
+            fi
+        fi
+
+        local CC_CMD="gcc"
+        local CXX_CMD="g++"
+        if command -v ccache >/dev/null 2>&1; then
+            CC_CMD="ccache gcc"
+            CXX_CMD="ccache g++"
+        fi
+
+        case "$MODE" in
+            release)
+                ./configure ${COMMON_OPTS} \
+                    CC="${CC_CMD}" CXX="${CXX_CMD}"
+                ;;
+            debug)
+                ./configure ${COMMON_OPTS} --enable-debug --enable-cassert \
+                    CC="${CC_CMD}" CXX="${CXX_CMD}" \
+                    CFLAGS="-Og -ggdb"
+                ;;
+            valgrind)
+                ./configure ${COMMON_OPTS} --enable-debug --enable-cassert \
+                    CC="${CC_CMD}" CXX="${CXX_CMD}" \
+                    CFLAGS="-Og -ggdb -DUSE_VALGRIND"
+                ;;
+            coverage)
+                ./configure ${COMMON_OPTS} --enable-debug --enable-cassert --enable-coverage \
+                    CC="${CC_CMD}" CXX="${CXX_CMD}" \
+                    CFLAGS="-O0 -ggdb"
+                ;;
+        esac
+
+        if [ $? -ne 0 ]; then
+            echo "Configuration failed. Please check the output for errors."
+            return 1
+        fi
+        echo "Configuration completed successfully."
+    )
+}
+
+function pg-make {
+    (
+        if [ ! -d ${HOME}/workspace/postgres ]; then
+            echo "PostgreSQL source directory not found. Please clone the repository first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres
+        echo "Building PostgreSQL..."
+        make world "$@"
+        if [ $? -ne 0 ]; then
+            echo "Make failed. Please check the output for errors."
+            return 1
+        fi
+        echo "Make completed successfully."
+    )
+}
+
+function pg-clean {
+    (
+        if [ ! -d ${HOME}/workspace/postgres ]; then
+            echo "PostgreSQL source directory not found. Please clone the repository first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres
+        echo "Cleaning PostgreSQL build files..."
+        make distclean
+        if [ $? -ne 0 ]; then
+            echo "Clean failed. Please check the output for errors."
+            return 1
+        fi
+        echo "Clean completed successfully."
+    )
+}
+
+function pg-check {
+    (
+        if [ ! -d ${HOME}/workspace/postgres ]; then
+            echo "PostgreSQL source directory not found. Please clone the repository first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres
+        echo "Running checks on PostgreSQL..."
+        make check-world "$@"
+        if [ $? -ne 0 ]; then
+            echo "Check failed. Please check the output for errors."
+            return 1
+        fi
+        echo "Check completed successfully."
+    )
+}
+
+function pg-regress {
+    (
+        if [ ! -d ${HOME}/workspace/postgres/src/test/regress ]; then
+            echo "PostgreSQL regress directory not found. Build PG first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres/src/test/regress
+
+        # Clean up previous temp instance
+        if [ -d "./tmp_check" ]; then
+            rm -rf "./tmp_check"
+        fi
+
+        if [ $# -eq 0 ]; then
+            echo "Running all regress tests (parallel_schedule)..."
+            make check
+        else
+            echo "Running specific regress tests: $@"
+            make check-tests TESTS="$*"
+        fi
+
+        if [ $? -ne 0 ]; then
+            echo "Regress test failed. Check regression.diffs for details."
+            if [ -f regression.diffs ]; then
+                echo "--- Last 20 lines of regression.diffs ---"
+                tail -20 regression.diffs
+            fi
+            return 1
+        fi
+        echo "Regress tests completed successfully."
+    )
+}
+
+function pg-regress-list {
+    (
+        local schedule_file="${HOME}/workspace/postgres/src/test/regress/parallel_schedule"
+        if [ ! -f "$schedule_file" ]; then
+            echo "Schedule file not found: $schedule_file"
+            return 1
+        fi
+        echo "Available regress tests (from parallel_schedule):"
+        echo "=================================================="
+        echo ""
+        grep "^test:" "$schedule_file" | sed 's/^test: //' | tr ' ' '\n' | sort -u | column
+        echo ""
+        echo "Usage:"
+        echo "  pg-regress                          # Run all regress tests"
+        echo "  pg-regress <test1> [test2...]       # Run specific tests"
+        echo "Example: pg-regress select join aggregates"
+    )
+}
+
+function pg-init {
+    if [ -z "$PGDATA" ]; then
+        echo "PGDATA is not set."
+        return 1
+    fi
+    if [ -d "$PGDATA" ] && [ -n "$(ls -A "$PGDATA" 2>/dev/null)" ]; then
+        echo "PGDATA is not empty: $PGDATA"
+        return 1
+    fi
+    echo "Initializing PostgreSQL database cluster at $PGDATA ..."
+    initdb -D "$PGDATA" -U "${PGUSER:-postgres}"
+    if [ $? -ne 0 ]; then
+        echo "initdb failed. Please check the output for errors."
+        return 1
+    fi
+    cat >> "$PGDATA/postgresql.conf" <<EOF
+listen_addresses = '*'
+shared_preload_libraries = ''
+EOF
+    cat >> "$PGDATA/pg_hba.conf" <<EOF
+host    all             all             0.0.0.0/0               trust
+host    replication     all             0.0.0.0/0               trust
+EOF
+    echo "PostgreSQL database cluster initialized successfully."
+}
+
+function pg-install {
+    (
+        if [ ! -d ${HOME}/workspace/postgres ]; then
+            echo "PostgreSQL source directory not found. Please clone the repository first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres
+        echo "Installing PostgreSQL to $HOME/.local ..."
+        make install-world
+        if [ $? -ne 0 ]; then
+            echo "Install failed. Please check the output for errors."
+            return 1
+        fi
+        echo "PostgreSQL installation completed successfully."
+    )
+}
+
+function pg-start {
+    if [ -z "$PGDATA" ]; then
+        echo "PGDATA is not set."
+        return 1
+    fi
+    if [ ! -d "$PGDATA" ]; then
+        echo "PGDATA directory not found: $PGDATA"
+        return 1
+    fi
+    pg_ctl -D "$PGDATA" -l "$PGDATA/logfile" start
+}
+
+function pg-restart {
+    if [ -z "$PGDATA" ]; then
+        echo "PGDATA is not set."
+        return 1
+    fi
+    pg_ctl -D "$PGDATA" -l "$PGDATA/logfile" restart
+}
+
+function pg-stop {
+    if [ -z "$PGDATA" ]; then
+        echo "PGDATA is not set."
+        return 1
+    fi
+    pg_ctl -D "$PGDATA" stop
+}
+
+function pg-status {
+    if [ -z "$PGDATA" ]; then
+        echo "PGDATA is not set."
+        return 1
+    fi
+    pg_ctl -D "$PGDATA" status
+}
+
+function pg-kill {
+    if [ -z "$PGDATA" ]; then
+        echo "PGDATA is not set."
+        return 1
+    fi
+    if [ ! -f "$PGDATA/postmaster.pid" ]; then
+        echo "PostgreSQL pid file not found: $PGDATA/postmaster.pid"
+        return 1
+    fi
+    kill `head -n 1 "$PGDATA/postmaster.pid"`
+}
+
+function pg-gcov {
+    (
+        if [ ! -d ${HOME}/workspace/postgres ]; then
+            echo "PostgreSQL source directory not found. Please clone the repository first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres
+        gencov.py "$@"
+        if [ $? -ne 0 ]; then
+            echo "gencov failed. Please check the output for errors."
+            return 1
+        fi
+    )
+}
+
+function pg-lcov {
+    (
+        if [ ! -d ${HOME}/workspace/postgres ]; then
+            echo "PostgreSQL source directory not found. Please clone the repository first."
+            return 1
+        fi
+        cd ${HOME}/workspace/postgres
+        case "$1" in
+            clear)
+                echo "Clearing coverage counters..."
+                lcov --zerocounters --directory .
+                if [ $? -ne 0 ]; then
+                    echo "Failed to clear coverage counters."
+                    return 1
+                fi
+                echo "Coverage counters cleared."
+                ;;
+            report)
+                echo "Capturing coverage data..."
+                lcov --capture --directory . --output-file lcov.gcov
+                if [ $? -ne 0 ]; then
+                    echo "Failed to capture coverage data."
+                    return 1
+                fi
+                echo "Generating HTML report..."
+                genhtml_version=$(genhtml --version 2>&1 | awk '{print $4}')
+                if [[ "$genhtml_version" =~ ^([0-9]+)\.([0-9]+) ]]; then
+                    if [ "${BASH_REMATCH[1]}" -ge 2 ]; then
+                        genhtml lcov.gcov --ignore-errors unmapped --output-directory html.gcov
+                    else
+                        genhtml lcov.gcov --output-directory html.gcov
+                    fi
+                else
+                    genhtml lcov.gcov --output-directory html.gcov
+                fi
+                if [ $? -ne 0 ]; then
+                    echo "Failed to generate HTML report."
+                    return 1
+                fi
+                echo "HTML report generated: html.gcov/index.html"
+                ;;
+            *)
+                echo "Usage: pg-lcov [clear|report]"
+                echo "  clear : Clear coverage counters (lcov --zerocounters)"
+                echo "  report : Capture coverage data and generate HTML report"
+                ;;
+        esac
+    )
+}
+
+function pg-valgrind {
+    local supp="$HOME/workspace/postgres/src/tools/valgrind.supp"
+    if [ ! -f "$supp" ]; then
+        echo "Suppression file not found: $supp"
+        return 1
+    fi
+    echo "Running PostgreSQL with Valgrind..."
+    mkdir -p "$HOME/workspace/valgrind"
+    rm -f "$HOME/workspace/valgrind"/*.log
+    valgrind --leak-check=full --num-callers=100 --gen-suppressions=all \
+        --suppressions="$supp" \
+        --time-stamp=yes \
+        --log-file="$HOME/workspace/valgrind/%p.log" \
+        --trace-children=yes \
+        postgres -D "${PGDATA}" &
+}
+
+function pg-core {
+    if [ -z "$1" ]; then
+        echo "Usage: pg-core <core-file>"
+        return 1
+    fi
+    gdb -q "$HOME/workspace/postgres/src/backend/postgres" "$1" \
+        -ex "set pagination off" \
+        -ex "set print pretty on" \
+        -ex "set print array on" \
+        -ex "set print elements 0" \
+        -ex "set print frame-arguments all" \
+        -ex "set print thread-events on" \
+        -ex "info threads" \
+        -ex "thread apply all bt full" \
+        -ex "info registers" \
+        -ex "info locals" \
+        -ex "info sharedlibrary" \
+        -ex "info files" \
+        -ex "info proc mappings" \
+        -ex "info stack" \
+        -ex "quit" \
+        2> /dev/null
+}
+
+export -f git-log
+export -f git-fetch
+export -f git-clean
+export -f pg-configure
+export -f pg-make
+export -f pg-clean
+export -f pg-check
+export -f pg-regress
+export -f pg-regress-list
+export -f pg-init
+export -f pg-install
+export -f pg-start
+export -f pg-restart
+export -f pg-stop
+export -f pg-status
+export -f pg-kill
+export -f pg-gcov
+export -f pg-lcov
+export -f pg-valgrind
+export -f pg-core

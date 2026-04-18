@@ -1,0 +1,13 @@
+session: docker
+windows:
+  - name: atelier
+    layout: tiled
+    panes:
+      - service: rocky9
+        command: docker compose exec -ti -e IGNOREEOF=99 -w /var/lib/pgsql/workspace/postgres -u postgres rocky9 /bin/bash --login
+      - service: rocky8
+        command: docker compose exec -ti -e IGNOREEOF=99 -w /var/lib/pgsql/workspace/postgres -u postgres rocky8 /bin/bash --login
+      - service: ubuntu24
+        command: docker compose exec -ti -e IGNOREEOF=99 -w /var/lib/postgresql/workspace/postgres -u postgres ubuntu24 /bin/bash --login
+      - service: ubuntu22
+        command: docker compose exec -ti -e IGNOREEOF=99 -w /var/lib/postgresql/workspace/postgres -u postgres ubuntu22 /bin/bash --login

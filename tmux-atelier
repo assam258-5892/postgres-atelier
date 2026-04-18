@@ -1,0 +1,3 @@
+#!/bin/bash
+
+./tmux-session.py tmux-atelier.yml "$@"

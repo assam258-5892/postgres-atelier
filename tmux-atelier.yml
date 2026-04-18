@@ -1,0 +1,15 @@
+session: atelier
+windows:
+  - name: monitor
+    layout: tiled
+    panes:
+      - title: btop
+        command: bash -c 'while sleep 1; do btop; done'
+      - title: shell
+        command: bash
+      - title: logs
+        command: bash -c 'while sleep 1; do docker compose logs -f rocky9 rocky8 ubuntu24 ubuntu22; done'
+    resize_panes:
+      - target: 1
+        x: 100
+        y: 50

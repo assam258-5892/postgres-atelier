@@ -1,0 +1,9 @@
+[ -f /etc/profile ] && source /etc/profile
+PATH=${HOME}/.local/bin:${PATH}
+PGDATA=${HOME}/workspace/pgdata
+PGUSER=postgres
+PGDATABASE=postgres
+export PATH PGDATA PGUSER PGDATABASE
+[ -f ~/.bashrc ] && source ~/.bashrc
+[ -f ${HOME}/.pgsql_profile ] && source ${HOME}/.pgsql_profile
+[ -f ${HOME}/workspace/.pgsql_profile ] && source ${HOME}/workspace/.pgsql_profile

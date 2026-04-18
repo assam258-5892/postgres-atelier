@@ -1,0 +1,42 @@
+#!/bin/bash
+
+MAX_RETRY=10
+DELAY=10
+
+retry () {
+    COUNT=${MAX_RETRY}
+    echo "[TRY] $@"
+    "$@"
+    RESULT=$?
+    while [ $RESULT -ne 0 ]; do
+        if [ $COUNT -le 0 ]; then
+            break
+        fi
+        COUNT=$(($COUNT - 1))
+        sleep $DELAY
+        echo "[RETRY] $@"
+        "$@"
+        RESULT=$?
+    done
+    if [ $RESULT -eq 0 ]; then
+        echo "[SUCCESS] $@"
+    else
+        echo "[FAILED] $@"
+    fi
+    return $RESULT
+}
+
+distros=("rocky/9" "rocky/8" "ubuntu/24" "ubuntu/22")
+
+for distro in "${distros[@]}"; do
+    tag_name=${distro//\//}  # strip the slash (/)
+    retry docker build \
+        --secret id=git_credentials,src="${HOME}/.git-credentials" \
+        --secret id=ssh_privkey,src="${HOME}/.ssh/id_ed25519" \
+        --secret id=ssh_pubkey,src="${HOME}/.ssh/id_ed25519.pub" \
+        --secret id=ssh_authkeys,src="${HOME}/.ssh/authorized_keys" \
+        --add-host host.docker.internal:host-gateway \
+        --build-arg GIT_URL="${GIT_URL:-}" \
+        -t ${tag_name} \
+        -f dockerfiles/${distro}/Dockerfile dockerfiles
+done

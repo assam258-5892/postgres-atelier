@@ -1,0 +1,98 @@
+services:
+  rocky9:
+    image: rocky9
+    container_name: rocky9
+    hostname: rocky9
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - rocky9-vscode-server:/var/lib/pgsql/.vscode-server
+      - rocky9-workspace:/var/lib/pgsql/workspace
+      - rocky9-claude:/var/lib/pgsql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
+  rocky8:
+    image: rocky8
+    container_name: rocky8
+    hostname: rocky8
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - rocky8-vscode-server:/var/lib/pgsql/.vscode-server
+      - rocky8-workspace:/var/lib/pgsql/workspace
+      - rocky8-claude:/var/lib/pgsql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
+  ubuntu24:
+    image: ubuntu24
+    container_name: ubuntu24
+    hostname: ubuntu24
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - ubuntu24-vscode-server:/var/lib/postgresql/.vscode-server
+      - ubuntu24-workspace:/var/lib/postgresql/workspace
+      - ubuntu24-claude:/var/lib/postgresql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
+  ubuntu22:
+    image: ubuntu22
+    container_name: ubuntu22
+    hostname: ubuntu22
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - ubuntu22-vscode-server:/var/lib/postgresql/.vscode-server
+      - ubuntu22-workspace:/var/lib/postgresql/workspace
+      - ubuntu22-claude:/var/lib/postgresql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
+volumes:
+  rocky9-vscode-server:
+  rocky9-workspace:
+  rocky9-claude:
+  rocky8-vscode-server:
+  rocky8-workspace:
+  rocky8-claude:
+  ubuntu24-vscode-server:
+  ubuntu24-workspace:
+  ubuntu24-claude:
+  ubuntu22-vscode-server:
+  ubuntu22-workspace:
+  ubuntu22-claude:
