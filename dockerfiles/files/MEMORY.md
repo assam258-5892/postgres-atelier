@@ -49,6 +49,28 @@ PostgreSQL internals development, patch implementation, cross-platform testing p
   4. The build/test commands you'll use
 - Wait for user confirmation before writing code
 
+## PostgreSQL Coding Conventions
+
+### Source / Comments / Test Output
+- **ASCII only** in source, comments, and regress expected output. No `→`, `²`, `≥`, `≠`, `≤`, etc.
+  - Arrows: use `->`
+  - Inequalities: use `>=`, `<=`, `!=`
+- Replace `if (a > b) b = a;` patterns with `b = Max(a, b);`
+
+### errmsg Style
+- **Active voice**: prefer "cannot Y X" / "cannot use X outside Z" over "X cannot be Yed" / "X can only be Zed"
+- **Lowercase first word**: `errmsg("unrecognized ...")`, `errmsg("cannot ...")`
+
+### Build System Hygiene
+- New typedef → update `src/tools/pgindent/typedefs.list` in the same patch
+- After large refactors, run pgindent before committing
+- When adding/removing `.o` files, keep both Makefile and meson.build in sync (file list and ordering)
+- New file under `src/backend/parser/` → update that directory's README
+
+### Where to Put Optimizations
+- Optimizations that change the **shape of user input** belong in the optimizer/planner stage, not in parse analysis
+- Reason: `pg_get_viewdef()` deparse output must be re-parseable — parse analysis must not silently rewrite the user's input
+
 ## Writing Test Cases
 
 ### Pre-analysis
