@@ -146,6 +146,27 @@ services:
       core:
         soft: -1
         hard: -1
+  uninorm:
+    image: ubuntu24
+    container_name: uninorm
+    hostname: uninorm
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - uninorm-vscode-server:/var/lib/postgresql/.vscode-server
+      - uninorm-workspace:/var/lib/postgresql/workspace
+      - uninorm-claude:/var/lib/postgresql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
 volumes:
   rocky9-vscode-server:
   rocky9-workspace:
@@ -168,3 +189,6 @@ volumes:
   utf-vscode-server:
   utf-workspace:
   utf-claude:
+  uninorm-vscode-server:
+  uninorm-workspace:
+  uninorm-claude:
