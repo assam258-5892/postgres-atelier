@@ -167,6 +167,27 @@ services:
       core:
         soft: -1
         hard: -1
+  trig:
+    image: ubuntu24
+    container_name: trig
+    hostname: trig
+    domainname: atelier
+    privileged: true
+    tty: false
+    extra_hosts:
+      - host.docker.internal:host-gateway
+      - host:host-gateway
+    volumes:
+      - trig-vscode-server:/var/lib/postgresql/.vscode-server
+      - trig-workspace:/var/lib/postgresql/workspace
+      - trig-claude:/var/lib/postgresql/.claude
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+      core:
+        soft: -1
+        hard: -1
 volumes:
   rocky9-vscode-server:
   rocky9-workspace:
@@ -192,3 +213,6 @@ volumes:
   uninorm-vscode-server:
   uninorm-workspace:
   uninorm-claude:
+  trig-vscode-server:
+  trig-workspace:
+  trig-claude:

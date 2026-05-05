@@ -39,3 +39,10 @@ windows:
         command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=L -w /var/lib/postgresql/workspace/postgres -u postgres uninorm /bin/bash --login
       - service: uninorm
         command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=R -w /var/lib/postgresql/workspace -u postgres uninorm /bin/bash --login
+  - name: trig
+    layout: even-horizontal
+    panes:
+      - service: trig
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=L -w /var/lib/postgresql/workspace/postgres -u postgres trig /bin/bash --login
+      - service: trig
+        command: docker compose exec -ti -e IGNOREEOF=99 -e PANE=R -w /var/lib/postgresql/workspace -u postgres trig /bin/bash --login
