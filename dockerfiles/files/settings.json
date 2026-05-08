@@ -130,7 +130,7 @@
     },
     "terminal.integrated.scrollback": 10000,
     "terminal.integrated.fontFamily": "'D2Coding', 'D2Coding ligature', 'D2Coding Nerd', Menlo, Monaco, 'Fira Mono', 'Droid Sans Mono', 'monospace', 'Noto Sans Mono CJK KR'",
-    "workbench.colorTheme": "Default Dark+",
+    "workbench.colorTheme": "Dark+",
     "workbench.iconTheme": "vscode-icons",
     "window.zoomLevel": 0,
     "[python]": {
