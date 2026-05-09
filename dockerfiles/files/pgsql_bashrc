@@ -332,6 +332,117 @@ function pg-kill {
     kill `head -n 1 "$PGDATA/postmaster.pid"`
 }
 
+function pg-indent {
+    (
+        if [ ! -d "${HOME}/workspace/postgres" ]; then
+            echo "PostgreSQL source directory not found."
+            return 1
+        fi
+        cd "${HOME}/workspace/postgres"
+
+        # pg_bsd_indent is not installed by 'make install-world'; if the in-tree
+        # binary exists (after pg-make), point pgindent at it via PGINDENT.
+        local indent_bin="src/tools/pg_bsd_indent/pg_bsd_indent"
+        [ -x "$indent_bin" ] && export PGINDENT="${PWD}/${indent_bin}"
+
+        local files=()
+        local commit_range=""    # for commit message check (set in commit-ish / range modes)
+
+        case "$1" in
+            "")
+                while IFS= read -r f; do [ -n "$f" ] && files+=("$f"); done \
+                    < <(git diff --name-only HEAD)
+                ;;
+            staged|--cached)
+                while IFS= read -r f; do [ -n "$f" ] && files+=("$f"); done \
+                    < <(git diff --cached --name-only --diff-filter=ACMR)
+                ;;
+            *..*|*...*)
+                while IFS= read -r f; do [ -n "$f" ] && files+=("$f"); done \
+                    < <(git diff --name-only --diff-filter=ACMR "$1")
+                commit_range="$1"
+                ;;
+            *)
+                if [ $# -eq 1 ] && git rev-parse --verify --quiet "$1^{commit}" >/dev/null 2>&1; then
+                    while IFS= read -r f; do [ -n "$f" ] && files+=("$f"); done \
+                        < <(git diff-tree -r --no-commit-id --name-only "$1")
+                    commit_range="$1^!"
+                else
+                    files=("$@")
+                fi
+                ;;
+        esac
+
+        if [ ${#files[@]} -eq 0 ] && [ -z "$commit_range" ]; then
+            echo "Nothing to process."
+            return 0
+        fi
+
+        # Split: C/H for pgindent, all (existing) files for non-ASCII check
+        local c_files=() text_files=()
+        local f
+        for f in "${files[@]}"; do
+            [ -e "$f" ] || continue
+            case "$f" in
+                *.c|*.h) c_files+=("$f"); text_files+=("$f") ;;
+                *)      text_files+=("$f") ;;
+            esac
+        done
+
+        if [ ${#files[@]} -gt 0 ]; then
+            echo "Files (${#files[@]}, C/H: ${#c_files[@]}):"
+            printf '  %s\n' "${files[@]}"
+        fi
+
+        # 1) pgindent (C/H only)
+        if [ ${#c_files[@]} -gt 0 ]; then
+            echo "==> Running pgindent on ${#c_files[@]} C/H file(s)..."
+            src/tools/pgindent/pgindent "${c_files[@]}" || {
+                echo "pgindent failed."
+                return 1
+            }
+        else
+            echo "==> Skipping pgindent (no C/H files)."
+        fi
+
+        # 2) non-ASCII check on all text files
+        local rc=0
+        if [ ${#text_files[@]} -gt 0 ]; then
+            echo "==> Checking ${#text_files[@]} file(s) for non-ASCII characters..."
+            local hits
+            hits=$(LANG=C perl -ne 'print "$ARGV:$.:$_" if /[^\x00-\x7F]/' "${text_files[@]}")
+            if [ -n "$hits" ]; then
+                echo "WARNING: non-ASCII characters in files:"
+                echo "$hits"
+                rc=2
+            fi
+        fi
+
+        # 3) non-ASCII check on commit messages (commit-ish / range modes)
+        if [ -n "$commit_range" ]; then
+            echo "==> Checking commit messages in $commit_range for non-ASCII..."
+            local msg_hits
+            msg_hits=$(git log --format='%H%n%B%n--END--' "$commit_range" 2>/dev/null \
+                | LANG=C perl -ne '
+                    if (/^([0-9a-f]{40})$/) { $sha = $1; $ln = 0; next; }
+                    if (/^--END--$/)        { next; }
+                    $ln++;
+                    print "  $sha:msg:$ln: $_" if /[^\x00-\x7F]/;
+                  ')
+            if [ -n "$msg_hits" ]; then
+                echo "WARNING: non-ASCII characters in commit messages:"
+                echo "$msg_hits"
+                rc=2
+            fi
+        fi
+
+        if [ $rc -eq 0 ]; then
+            echo "OK: ASCII-clean."
+        fi
+        return $rc
+    )
+}
+
 function pg-gcov {
     (
         if [ ! -d ${HOME}/workspace/postgres ]; then
@@ -454,6 +565,7 @@ export -f pg-restart
 export -f pg-stop
 export -f pg-status
 export -f pg-kill
+export -f pg-indent
 export -f pg-gcov
 export -f pg-lcov
 export -f pg-valgrind

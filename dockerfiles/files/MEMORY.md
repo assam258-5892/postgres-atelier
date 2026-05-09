@@ -63,7 +63,8 @@ PostgreSQL internals development, patch implementation, cross-platform testing p
 
 ### Build System Hygiene
 - New typedef → update `src/tools/pgindent/typedefs.list` in the same patch
-- After large refactors, run pgindent before committing
+- Before creating a patch file, run `pg-indent` to format and ASCII-check changed files; the argument selects scope: no args = tracked staged+unstaged vs HEAD, `staged` / `--cached`, `<commit>`, `<rev>..<rev>`, or explicit `<files>...`. Review its in-place edits and any non-ASCII warnings (rc=2) with the user before producing the patch.
+- When the user asks for `pgindent` / `indent`, always use the `pg-indent` helper (do not invoke `pgindent` or `pg_bsd_indent` directly)
 - When adding/removing `.o` files, keep both Makefile and meson.build in sync (file list and ordering)
 - New file under `src/backend/parser/` → update that directory's README
 

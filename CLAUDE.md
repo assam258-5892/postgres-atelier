@@ -92,6 +92,7 @@ pg-regress-list                                # lists available tests from para
 pg-init                                        # initdb -D $PGDATA + minimal postgresql.conf/pg_hba.conf
 pg-start / pg-restart / pg-stop / pg-status    # pg_ctl wrappers against $PGDATA
 pg-kill                                        # kills via $PGDATA/postmaster.pid
+pg-indent [<commit>|<range>|staged|<files>...] # pgindent on changed *.c/*.h + non-ASCII scan (files & commit msg); no args = `git diff --name-only HEAD` (tracked staged+unstaged; untracked excluded)
 pg-valgrind                                    # runs postgres under Valgrind; auto-picks up PG source's src/tools/valgrind.supp
 pg-core <core-file>                            # analyzes a core with GDB
 pg-gcov [args...]                              # commit-scoped coverage report via gencov.py
